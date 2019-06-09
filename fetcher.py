@@ -1,4 +1,6 @@
 import requests
+import argparse
+import glob
 import time
 import os
 import json
@@ -20,9 +22,9 @@ def api_time_string(start, stop):
     return result
 
 
-@dataclass
+@dataclass(eq=True, unsafe_hash=True)
 class DataEntry:
-    data: list
+    data: tuple
     start_year: int
     end_year: int
     name: str
@@ -37,10 +39,15 @@ class DataEntry:
         fname = os.path.join(folder_path, f"{self.region}.json")
         with open(fname, 'w') as file:
             json.dump(self.__dict__, file)
+
+    def get_range(self, start, end):
+        alt_data = self.data[start - self.start_year : end - self.end_year]
     
     @classmethod
     def from_json(cls, fp):
-        return cls(**json.load(fp))
+        d = json.load(fp)
+        d['data'] = tuple(d['data'])
+        return cls(**d)
 
 
 class DataCollection:
@@ -59,6 +66,16 @@ class DataCollection:
             result &= self.set_dict[y]
         return result
 
+    @classmethod
+    def read(cls, directory):
+        result = cls()
+        for fname in glob.glob(os.path.join(directory, '*/*')):
+            with open(fname) as file:
+                e = DataEntry.from_json(file)
+                result.add(e)
+        return result
+
+
 class BdlApi:
 
     def __init__(self, token=None):
@@ -76,7 +93,7 @@ class BdlApi:
             name += name2
         
         y_start = var_data['years'][0]
-        y_end = var_data['years'][-1]
+        y_end = var_data['years'][-1] + 1
 
         unit = var_data['measureUnitName']
 
