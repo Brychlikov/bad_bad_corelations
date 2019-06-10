@@ -14,13 +14,6 @@ class NoResourceException(Exception):
 class APIErrorException(Exception):
     pass
 
-def api_time_string(start, stop):
-    result = ''
-    for y in range(start, stop - 1):
-        result += f'year={y}&'
-    result += f'year={stop -1}'
-    return result
-
 
 @dataclass(eq=True, unsafe_hash=True)
 class DataEntry:
@@ -41,7 +34,23 @@ class DataEntry:
             json.dump(self.__dict__, file)
 
     def get_range(self, start, end):
-        alt_data = self.data[start - self.start_year : end - self.end_year]
+        if start < self.start_year or end > self.end_year or start > end:
+            raise ValueError("Incorrect range boundries")
+        if end == self.end_year:
+            alt_data = self.data[start - self.start_year :]
+
+        else:
+            alt_data = self.data[start - self.start_year : end - self.end_year]
+
+        return DataEntry(
+            alt_data,
+            start,
+            end,
+            self.name,
+            self.region,
+            self.unit,
+            self.res_id
+        )
     
     @classmethod
     def from_json(cls, fp):
@@ -57,14 +66,14 @@ class DataCollection:
         self.set_dict = {i: set() for i in range(1980, 2020)}
     
     def add(self, entry: DataEntry):
-        for y in range(entry.start_year, entry.end_year + 1):
+        for y in range(entry.start_year, entry.end_year):
             self.set_dict[y].add(entry)
 
     def return_range(self, start, stop):
         result = self.set_dict[start]
         for y in range(start, stop):
             result &= self.set_dict[y]
-        return result
+        return [e.get_range(start, stop) for e in result]
 
     @classmethod
     def read(cls, directory):
