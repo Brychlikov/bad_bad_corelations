@@ -14,6 +14,9 @@ class NoResourceException(Exception):
 class APIErrorException(Exception):
     pass
 
+class BrokenDataPoint(Exception):
+    pass
+
 
 @dataclass(eq=True, unsafe_hash=True)
 class DataEntry:
@@ -21,6 +24,7 @@ class DataEntry:
     start_year: int
     end_year: int
     name: str
+    topic: str
     region: str
     unit: str
     res_id: int = -1
@@ -92,19 +96,42 @@ class BdlApi:
         self._s = requests.session()
         self.__token = token
 
+
+    def get_subject(self, subject_id):
+        """recursively finds full subject (including parents) of given id. Costs up to ±4 queries"""
+        data = self._api_query(f"Subjects/{subject_id}").json()
+        parent_id = data.get('parentId')
+        name = data["name"]
+        if parent_id is None:
+            return name
+        else:
+            return f"{self.get_subject(parent_id)} - {name}"
+
     def fetch_data_point(self, var_id):
 
         var_data = self._api_query(f"Variables/{var_id}").json()
 
-        name = var_data['n1']
-        name2 = var_data.get('n2')
-        if name2:
-            name += name2
+        name = ""
+        i = 1
+        while True:
+            next_segment = var_data.get(f"n{i}")
+            if next_segment is None:
+                break
+            else:
+                if i != 1:
+                    name += " - "
+                name += next_segment
+                i += 1
         
         y_start = var_data['years'][0]
         y_end = var_data['years'][-1] + 1
 
+        if len(var_data['years']) != y_end - y_start:
+            raise BrokenDataPoint
+
         unit = var_data['measureUnitName']
+
+        subject = self.get_subject(var_data["subjectId"])
 
         raw_results = []
         result = []
@@ -119,7 +146,8 @@ class BdlApi:
                 y_start,
                 y_end,
                 name,
-                e['name'],
+                subject,
+                e['name'],  # region name
                 unit,
                 var_id
             ))
@@ -146,15 +174,17 @@ if __name__ == "__main__":
     token = open('token.txt').read().strip('\n')
     b = BdlApi(token)
 
-    PREFIX = 'data'
+    PREFIX = 'data2'
     t0 = time.time()
     counter = 0
     prev = time.time()
-    for i in range(1000, 30000):
+    for i in range(2841, 30000):
         try:
             things = b.fetch_data_point(i)
         except NoResourceException:
             pass
+        except BrokenDataPoint:
+            print(f"Broken datapoint {i}")
         except APIErrorException as exception:
             print(repr(exception))
             time.sleep(1)
