@@ -20,7 +20,7 @@ try:
                 p2 = pearsonr(e1.data[2:], e2.data[2:])
             except ValueError:
                 continue
-            if p[0] > 0.95:
+            if p > 0.95:
                 result.append((p2, p, (e1, e2)))
                 print(f"Correlation between \n{e1.name} \n {e2.name} \n is {p}")
                 print()
@@ -29,6 +29,6 @@ except KeyboardInterrupt:
 
 print("corelaitons ended")
 print("====================================================================================================")
-result.sort(key=lambda i: abs(i[0][0]))
+result.sort(key=lambda i: abs(i[0]))
 for p1, p2, (e1, e2) in result[:200]:
     print(f"{e1.name}\n{e2.name}\nCorrelations {p1} and {p2}\n\n")
