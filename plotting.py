@@ -5,7 +5,7 @@ from random import shuffle
 from math import log10
 import numpy as np
 
-def simple_plot(e1: DataEntry, e2: DataEntry, savename=None):
+def simple_plot(e1: DataEntry, e2: DataEntry, text="", savename=None):
     # plt.xkcd()
     x = range(e1.start_year, e1.end_year)
     fig, ax1 = plt.subplots()
@@ -21,9 +21,9 @@ def simple_plot(e1: DataEntry, e2: DataEntry, savename=None):
 
     if savename:
         fig = plt.gcf()
+        fig.text(0.3, 0.1, text, fontsize=8)
         fig.set_size_inches((8, 8), forward=False)
         fig.savefig(savename)
-        fig.close()
         plt.close()
 
     else:
@@ -39,9 +39,9 @@ if __name__ == "__main__":
     i = 0
     for line in open('pairs.txt'):
         data = line.split(',')
-        e1 = DataEntry.from_json(open(data[0].strip())).get_range(2000, 2010)
-        e2 = DataEntry.from_json(open(data[1].strip())).get_range(2000, 2010)
-        simple_plot(e1, e2, os.path.join(RESULT_PATH, f'{i}.png'))
+        e1 = DataEntry.from_json(open(data[0].strip())).get_range(2002, 2010)
+        e2 = DataEntry.from_json(open(data[1].strip())).get_range(2002, 2010)
+        simple_plot(e1, e2, f"p1={data[2]}  p2={data[3]}", os.path.join(RESULT_PATH, f'{i}.png'))
         i += 1
 
     # pair = (3146, 2131)
