@@ -8,13 +8,13 @@ def pearsonr(x, y):
 
 def false_correlation(e1, e2):
     try:
-        p = pearsonr(e1.data, e2.data)
-        p2 = pearsonr(e1.data[2:], e2.data[2:])
+        p_long = pearsonr(e1.data, e2.data)
+        p_short = pearsonr(e1.data[2:], e2.data[2:])
     except ValueError:
         return False
-    return abs(p) > 0.925 and abs(p2) < 0.35
+    return abs(p_short) > 0.925 and abs(p_long) < 0.35
 
-db = DataCollection.read('data2')
+db = DataCollection.read('data3')
 
 data = db.return_range(2000, 2010)
 data = [e for e in data if 'ogółem' not in e.name and 'sektor' not in e.name]
@@ -22,7 +22,7 @@ shuffle(data)
 print(len(data))
 input()
 
-with open('pairs.txt', 'a') as file:
+with open('pairs.txt', 'w') as file:
     result = []
 
     try:
