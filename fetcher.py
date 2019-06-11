@@ -51,6 +51,7 @@ class DataEntry:
             start,
             end,
             self.name,
+            self.topic,  
             self.region,
             self.unit,
             self.res_id
