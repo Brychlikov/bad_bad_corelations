@@ -96,17 +96,24 @@ class BdlApi:
         """This is where authentication will be some day"""
         self._s = requests.session()
         self.__token = token
+        self.subject_memoizer = {}
 
 
     def get_subject(self, subject_id):
-        """recursively finds full subject (including parents) of given id. Costs up to ±4 queries"""
+        """recursively finds full subject (including parents) of given id. Costs up to ±4 queries. Memoized."""
+        q = self.subject_memoizer.get(subject_id)
+        if q:  # we already have this subject
+            return q
         data = self._api_query(f"Subjects/{subject_id}").json()
         parent_id = data.get('parentId')
         name = data["name"]
         if parent_id is None:
+            self.subject_memoizer[subject_id] = name
             return name
         else:
-            return f"{self.get_subject(parent_id)} - {name}"
+            result = f"{self.get_subject(parent_id)} - {name}"
+            self.subject_memoizer[subject_id] = result
+            return result
 
     def fetch_data_point(self, var_id):
 
@@ -175,26 +182,27 @@ if __name__ == "__main__":
     token = open('token.txt').read().strip('\n')
     b = BdlApi(token)
 
-    PREFIX = 'data2'
+    PREFIX = 'data3'
     t0 = time.time()
     counter = 0
     prev = time.time()
-    for i in range(2841, 30000):
+    for i in range(3001, 30000, 3):
         try:
             things = b.fetch_data_point(i)
         except NoResourceException:
+            print(f"404: {i}")
             pass
         except BrokenDataPoint:
             print(f"Broken datapoint {i}")
         except APIErrorException as exception:
             print(repr(exception))
-            time.sleep(1)
+            time.sleep(10)
         for e in things:
             e.save(PREFIX)
         
         counter += 1
         speed = counter / (time.time() - t0) * 60
-        print(f'Querry finished after {time.time() - prev}s     {speed:.2}/min')
+        print(f'Query finished after {time.time() - prev}s     {speed:.2}/min')
         prev = time.time()
         
 

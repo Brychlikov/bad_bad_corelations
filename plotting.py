@@ -23,6 +23,8 @@ def simple_plot(e1: DataEntry, e2: DataEntry, savename=None):
         fig = plt.gcf()
         fig.set_size_inches((8, 8), forward=False)
         fig.savefig(savename)
+        fig.close()
+        plt.close()
 
     else:
         plt.show()
@@ -35,10 +37,10 @@ if __name__ == "__main__":
 
     
     i = 0
-    for line in open('good_pairs.txt'):
+    for line in open('pairs.txt'):
         data = line.split(',')
-        e1 = DataEntry.from_json(open(f'data2/{data[0].strip()}/POLSKA.json')).get_range(2000, 2010)
-        e2 = DataEntry.from_json(open(f'data2/{data[1].strip()}/POLSKA.json')).get_range(2000, 2010)
+        e1 = DataEntry.from_json(open(data[0].strip())).get_range(2000, 2010)
+        e2 = DataEntry.from_json(open(data[1].strip())).get_range(2000, 2010)
         simple_plot(e1, e2, os.path.join(RESULT_PATH, f'{i}.png'))
         i += 1
 
@@ -54,4 +56,3 @@ if __name__ == "__main__":
     # shuffle(res)
     # e1 = res[0]
     # e2 = res[1]
-    simple_plot(e1, e2)
