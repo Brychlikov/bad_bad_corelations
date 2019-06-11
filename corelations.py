@@ -4,6 +4,14 @@ from scipy.stats.stats import pearsonr as scipyp
 def pearsonr(x, y):
     return scipyp(x, y)[0]
 
+def false_correlation(e1, e2):
+    try:
+        p = pearsonr(e1.data, e2.data)
+        p2 = pearsonr(e1.data[2:], e2.data[2:])
+    except ValueError:
+        return False
+    return abs(p) > 0.925 and abs(p2) < 0.35
+
 db = DataCollection.read('data2')
 
 data = db.return_range(2000, 2010)
