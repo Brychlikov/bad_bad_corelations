@@ -10,14 +10,20 @@ def simple_plot(e1: DataEntry, e2: DataEntry, text="", savename=None):
     x = range(e1.start_year, e1.end_year)
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
-    ax1.plot(x, [i / 10 ** round(log10(i)) for i in e1.data], c="r", label=e1.name)
-    ax2.plot(x, [i / 10 ** round(log10(i)) for i in e2.data], c="b", label=e2.name)
+
+    mag_order1 = round(log10(e1.data[0]))
+    mag_order2 = round(log10(e2.data[0]))
+
+    ax1.plot(x, [i / 10 ** mag_order1 for i in e1.data], c="r", label=e1.name[:e1.name.find('-')])
+    ax1.ticklabel_format(useOffset=False)
+    ax2.plot(x, [i / 10 ** mag_order2 for i in e2.data], c="b", label=e2.name[:e2.name.find('-')])
+    ax2.ticklabel_format(useOffset=False)
     ax1.legend(loc="upper right")
     ax2.legend(loc="upper left")
     ax1.set_xlabel('Rok')
-    ax1.set_ylabel(e1.unit, c="r")
-    ax2.set_ylabel(e2.unit, c="b")
-    plt.title(f"Correlation between: {e1.name} {e1.topic} \n and {e2.name} {e2.topic}", wrap=True)
+    ax1.set_ylabel(e1.unit + f" 10^{mag_order1}", c="r")
+    ax2.set_ylabel(e2.unit + f" 10^{mag_order2}", c="b")
+    plt.title(f"Correlation between: {e1.region} - {e1.name} {e1.topic.split('-')[-1]} \n and \n {e2.region} - {e2.name} {e2.topic.split('-')[-1]}", wrap=True)
 
     if savename:
         fig = plt.gcf()
