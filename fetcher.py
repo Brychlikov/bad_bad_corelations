@@ -7,6 +7,8 @@ import json
 from dataclasses import dataclass
 
 BASE_URL = "https://bdl.stat.gov.pl/api/v1/"
+RANGE_STEP = 3
+PREFIX = 'data3'
 
 class NoResourceException(Exception):
     pass
@@ -179,14 +181,14 @@ class BdlApi:
             raise APIErrorException(f"{r.text}")
 
 if __name__ == "__main__":
+    # Read access token. Not obligarory
     token = open('token.txt').read().strip('\n')
     b = BdlApi(token)
 
-    PREFIX = 'data3'
     t0 = time.time()
     counter = 0
     prev = time.time()
-    for i in range(3001, 30000, 3):
+    for i in range(3001, 30000, RANGE_STEP):
         try:
             things = b.fetch_data_point(i)
         except NoResourceException:
